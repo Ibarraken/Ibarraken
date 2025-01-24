@@ -1,0 +1,107 @@
+from flask import Flask, jsonify, request, abort
+import os
+
+app = Flask(_name_)
+
+# Sample tasks data
+tasks = [
+    {"id": 1, "task": "Do the laundry"},
+    {"id": 2, "task": "Write the report"}
+]
+
+# Helper function to find a task by ID
+def get_task(task_id):
+    return next((task for task in tasks if task["id"] == task_id), None)
+
+# API key validation function
+def check_api_key():
+    api_key = request.headers.get("API-Key")
+    if api_key != os.getenv("LAB4_API_KEY"):
+        abort(401, description="Unauthorized")
+
+# Version 1: API version 1
+@app.route('/apiv1/tasks', methods=['GET'])
+def get_tasks_v1():
+    return jsonify({"tasks": tasks})
+
+@app.route('/apiv1/tasks/<int:task_id>', methods=['GET'])
+def get_task_v1(task_id):
+    task = get_task(task_id)
+    if not task:
+        abort(404, description="Task not found")
+    return jsonify(task)
+
+@app.route('/apiv1/tasks', methods=['POST'])
+def add_task_v1():
+    new_task = request.get_json()
+    new_task["id"] = len(tasks) + 1
+    tasks.append(new_task)
+    return jsonify(new_task), 201
+
+@app.route('/apiv1/tasks/<int:task_id>', methods=['PUT'])
+def update_task_v1(task_id):
+    task = get_task(task_id)
+    if not task:
+        abort(404, description="Task not found")
+    updated_task = request.get_json()
+    task.update(updated_task)
+    return '', 204
+
+@app.route('/apiv1/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task_v1(task_id):
+    task = get_task(task_id)
+    if not task:
+        abort(404, description="Task not found")
+    tasks.remove(task)
+    return '', 204
+
+# Version 2: API version 2 (with potential changes to endpoints or responses)
+@app.route('/apiv2/tasks', methods=['GET'])
+def get_tasks_v2():
+    if not tasks:
+        return '', 204
+    return jsonify({"tasks": tasks})
+
+@app.route('/apiv2/tasks/<int:task_id>', methods=['GET'])
+def get_task_v2(task_id):
+    task = get_task(task_id)
+    if not task:
+        abort(404, description="Task not found")
+    return jsonify(task)
+
+@app.route('/apiv2/tasks', methods=['POST'])
+def add_task_v2():
+    new_task = request.get_json()
+    new_task["id"] = len(tasks) + 1
+    tasks.append(new_task)
+    return jsonify(new_task), 201
+
+@app.route('/apiv2/tasks/<int:task_id>', methods=['PUT'])
+def update_task_v2(task_id):
+    task = get_task(task_id)
+    if not task:
+        abort(404, description="Task not found")
+    updated_task = request.get_json()
+    task.update(updated_task)
+    return '', 204
+
+@app.route('/apiv2/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task_v2(task_id):
+    task = get_task(task_id)
+    if not task:
+        abort(404, description="Task not found")
+    tasks.remove(task)
+    return '', 204
+
+# Error handling for 404, 401, etc.
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Not found", "message": error.description}), 404
+
+@app.errorhandler(401)
+def unauthorized(error):
+    return jsonify({"error": "Unauthorized", "message": error.description}), 401
+
+# Run the app
+if _name_ == '_main_':
+    app.run(debug=True)
