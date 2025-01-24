@@ -1,0 +1,76 @@
+
+from flask import Flask, request, jsonify
+
+app = Flask(_name_)
+
+# Sample database with one task
+task_db = [
+    {"task_id": 1, "task_title": "Laboratory Activity", "task_desc": "Create Lab Act 2", "is_finished": False}
+]
+
+# Helper function to find task by ID
+def find_task_by_id(task_id):
+    return next((task for task in task_db if task["task_id"] == task_id), None)
+
+# GET /tasks/{task_id} - Get a specific task by task_id
+@app.route('/tasks/<int:task_id>', methods=['GET'])
+def get_task(task_id):
+    task = find_task_by_id(task_id)
+    if task:
+        return jsonify({"status": "ok", "task": task}), 200
+    else:
+        return jsonify({"error": "Task not found"}), 404
+
+# POST /tasks - Create a new task
+@app.route('/tasks', methods=['POST'])
+def create_task():
+    data = request.get_json()
+    
+    # Validate input data
+    if not data.get('task_title') or not data.get('task_desc'):
+        return jsonify({"error": "task_title and task_desc are required"}), 400
+    
+    task_id = len(task_db) + 1
+    new_task = {
+        "task_id": task_id,
+        "task_title": data["task_title"],
+        "task_desc": data["task_desc"],
+        "is_finished": False
+    }
+    
+    task_db.append(new_task)
+    return jsonify({"status": "ok", "task": new_task}), 201
+
+# PATCH /tasks/{task_id} - Update a task by task_id
+@app.route('/tasks/<int:task_id>', methods=['PATCH'])
+def update_task(task_id):
+    task = find_task_by_id(task_id)
+    
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+    
+    data = request.get_json()
+
+    if "task_title" in data:
+        task["task_title"] = data["task_title"]
+    if "task_desc" in data:
+        task["task_desc"] = data["task_desc"]
+    if "is_finished" in data:
+        task["is_finished"] = data["is_finished"]
+
+    return jsonify({"status": "ok", "task": task}), 200
+
+# DELETE /tasks/{task_id} - Delete a task by task_id
+@app.route('/tasks/<int:task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    task = find_task_by_id(task_id)
+    
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+
+    task_db.remove(task)
+    return jsonify({"status": "ok"}), 200
+
+# Run the Flask app
+if _name_ == '_main_':
+    app.run(debug=True)
