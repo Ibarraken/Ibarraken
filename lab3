@@ -1,0 +1,34 @@
+from flask import Flask, jsonify
+import requests
+
+app = Flask(__name__)
+
+# Endpoint to get posts and comments for a specific user
+@app.route('/detailed_post/<int:userID>', methods=['GET'])
+def get_detailed_post(userID):
+    # Fetch the user's posts
+    posts_url = f'https://jsonplaceholder.typicode.com/posts?userId={userID}'
+    posts_response = requests.get(posts_url)
+    posts = posts_response.json()
+    
+    detailed_posts = []
+    
+    # For each post, fetch the comments
+    for post in posts:
+        post_id = post['id']
+        comments_url = f'https://jsonplaceholder.typicode.com/comments?postId={post_id}'
+        comments_response = requests.get(comments_url)
+        comments = comments_response.json()
+        
+        post_data = {
+            'post': post,
+            'comments': comments
+        }
+        
+        detailed_posts.append(post_data)
+    
+    # Return the result as a JSON response
+    return jsonify(detailed_posts)
+
+if __name__ == '__main__':
+    app.run(debug=True)
