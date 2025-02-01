@@ -1,0 +1,33 @@
+from fastapi import FastAPI, Request, HTTPException
+import os
+
+app = FastAPI()
+
+# Read the API key from the environment variable
+API_KEY = os.getenv("act4_API_KEY")
+
+if not API_KEY:
+    raise ValueError("act4_API_KEY environment variable is missing.")
+
+@app.get("/api")
+async def api(request: Request):
+    # Extract the Authorization header value
+    authorization_header = request.headers.get("Authorization")
+    
+    if not authorization_header:
+        raise HTTPException(status_code=401, detail="Authorization header missing")
+    
+    # Expected format: "Bearer <API_KEY>"
+    try:
+        scheme, provided_api_key = authorization_header.split(" ")
+        if scheme.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid authorization scheme")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header format")
+    
+    # Validate API key
+    if provided_api_key == API_KEY:
+        return {"message": "API key validated successfully!"}
+    else:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
